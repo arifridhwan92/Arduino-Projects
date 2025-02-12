@@ -20,7 +20,7 @@ TinyGPSPlus gps;
 LiquidCrystal_I2C lcd(0x27, 16, 2); // Change the address (0x27) if necessary
 
 // Replace with the recipient's phone number
-const String PHONE_NUMBER = "+60163053106"; // Use international format
+const String PHONE_NUMBER = "+60123456789"; // Use international format
 
 void setup() {
   // Initialize Serial Monitor for debugging
