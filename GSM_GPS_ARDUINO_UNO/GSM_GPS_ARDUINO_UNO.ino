@@ -15,7 +15,7 @@ TinyGPSPlus gps;
 SoftwareSerial sim800l(SIM800L_RX, SIM800L_TX);
 
 // Replace with the recipient's phone number
-const String PHONE_NUMBER = "+601116717696"; // Use international format
+const String PHONE_NUMBER = "+60123456789"; // Use international format
 
 
 void setup()
