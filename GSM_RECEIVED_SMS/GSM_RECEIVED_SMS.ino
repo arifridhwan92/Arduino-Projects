@@ -1,65 +1,126 @@
-#include <SoftwareSerial.h> 
+#include <SoftwareSerial.h>
+#include <Wire.h> 
+#include <LiquidCrystal_I2C.h>
+#include <TinyGPS++.h>
 
+LiquidCrystal_I2C lcd(0x27,16,2);  // set the LCD address to 0x27 for a 16 chars and 2 line display
+// The TinyGPS++ object
+TinyGPSPlus gps;
 
 // Define the pins for SoftwareSerial
-#define SIM800L_RX 10
-#define SIM800L_TX 11
+#define SIM800L_RX 2
+#define SIM800L_TX 3
 
 // Create a SoftwareSerial object
 SoftwareSerial sim800l(SIM800L_RX, SIM800L_TX);
 
-void setup() {
-  // Initialize Serial Monitor for debugging
-  Serial.begin(9600);
-  while (!Serial);
+// Replace with the recipient's phone number
+const String PHONE_NUMBER = "+60123456789"; // Use international format
 
-  // Initialize SIM800L communication
+
+void setup()
+{
+  lcd.init();                      // initialize the lcd 
+  lcd.backlight();
+  Serial.begin(9600);
+
   sim800l.begin(9600);
   delay(1000);
 
-  Serial.println("Initializing SIM800L...");
+  lcd.init();
+  lcd.backlight(); // Turn on the backlight
+  lcd.print("Initializing...");
+  delay(2000);
+  lcd.clear();
 
-  // Check if the module is ready
+  // Initialize GSM communication using hardware serial
+  Serial.begin(9600); // Use Serial for GSM (TX=1, RX=0 on Arduino Uno)
+  delay(1000);
+
+  lcd.setCursor(0, 0);
+  lcd.print("Initializing GSM");
+  delay(2000);
+  lcd.clear();
+
+  // Check if the GSM module is ready
   sim800l.println("AT");
   delay(1000);
-  while (sim800l.available()) {
-    Serial.write(sim800l.read());
-  }
+  lcd.setCursor(0, 0);
+  lcd.print("Sending AT...");
+  delay(3000);
 
-  // Configure the module to text mode
+  lcd.clear();
+
+  // Configure the GSM module to text mode
   sim800l.println("AT+CMGF=1");
   delay(1000);
-  while (sim800l.available()) {
-    Serial.write(sim800l.read());
-  }
+  lcd.setCursor(0, 0);
+  lcd.print("Setting Text Mode");
+  delay(3000);
+  
+  lcd.clear();
 
-  // Set the module to show incoming SMS directly
-  sim800l.println("AT+CNMI=2,2,0,0,0");
+  // Set the GSM module to show incoming SMS directly
+ sim800l.println("AT+CNMI=2,2,0,0,0");
   delay(1000);
-  while (sim800l.available()) {
-    Serial.write(sim800l.read());
-  }
+  lcd.setCursor(0, 0);
+  lcd.print("Setting SMS Mode");
+  delay(3000);
 
-  Serial.println("SIM800L is ready to receive SMS...");
+  lcd.clear();
+  lcd.setCursor(0, 0);
+  lcd.print("GSM Ready!");
+  delay(2000);
+  lcd.clear();
+  lcd.setCursor(0, 0);
+  lcd.print("Waiting for GPS!");
 }
 
-void loop() {
 
-  // Check if there is any data available from the SIM800L module
-  if (sim800l.available()) {
-    String response = sim800l.readString();
-    Serial.println(response);  // Print the response to the Serial Monitor
+void loop()
+{
+   while (Serial.available() > 0){
+    gps.encode(Serial.read());
+    if (gps.location.isUpdated()){
+      lcd.clear();
+      lcd.setCursor(0,0);
+      lcd.print("Lat:" + String(gps.location.lat(), 6)); 
+      lcd.setCursor(0,1);
+      lcd.print("Lng:" + String(gps.location.lng(), 6)); 
+      String latitude = String(gps.location.lat(), 4);
+      String longitude = String(gps.location.lng(), 4);
 
+          if (sim800l.available()) {
+      String response = sim800l.readString();
     // Check if the response contains an SMS
-    if (response.indexOf("+CMT:") != -1) {
-      Serial.println("New SMS Received!");
+        
+        if (response.indexOf("+CMT:") != -1) {
       // Extract and print the SMS content
-      int index = response.indexOf("\r\n");
-      String smsContent = response.substring(index + 2);
-      Serial.println("SMS Content: " + smsContent);
-      if (smsContent.indexOf("LOCATION") != -1) {
-        Serial.println("Fetching GPS Location...");
+          int index = response.indexOf("\r\n");
+          String smsContent = response.substring(index + 2);
+            if (smsContent.indexOf("LOCATION") != -1) {
+              lcd.clear();
+              lcd.setCursor(0, 0);
+              lcd.print("Sending location!");
+              delay(3000);
+              sim800l.println("AT+CMGF=1");
+              delay(1000);
+              sim800l.print("AT+CMGS=\"");
+              sim800l.print(PHONE_NUMBER);
+              sim800l.println("\"");
+              delay(1000);
+              sim800l.print("The current location is: " + latitude + "," + longitude); // Send formatted message
+              delay(1000);
+              sim800l.write(26); // Send Ctrl+Z to indicate the end of the message
+              delay(1000);
+              lcd.clear();
+              lcd.setCursor(0, 0);
+              lcd.print("Location sent!");
       }
+    }
+        }
+              delay(3000);
+     //end of gps 
     }
   }
 }
