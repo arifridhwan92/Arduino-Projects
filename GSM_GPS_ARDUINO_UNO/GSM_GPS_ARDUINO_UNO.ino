@@ -8,8 +8,8 @@ LiquidCrystal_I2C lcd(0x27,16,2);  // set the LCD address to 0x27 for a 16 chars
 TinyGPSPlus gps;
 
 // Define the pins for SoftwareSerial
-#define SIM800L_RX 10
-#define SIM800L_TX 11
+#define SIM800L_RX 2
+#define SIM800L_TX 3
 
 // Create a SoftwareSerial object
 SoftwareSerial sim800l(SIM800L_RX, SIM800L_TX);
