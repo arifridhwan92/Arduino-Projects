@@ -194,8 +194,8 @@ void controlLighting() {
   DateTime now = rtc.now();
 
   // Define on/off times in minutes from midnight
-  const int lightOnTimeMinutes = 20 * 60;      // 8:00 PM = 1200 minutes
-  const int lightOffTimeMinutes = 6 * 60 + 30; // 6:30 AM = 390 minutes
+  const int lightOnTimeMinutes = 8 * 60;      // 8:00 PM = 1200 minutes
+  const int lightOffTimeMinutes = 16 * 60; // 4:00 PM = 390 minutes
 
   // Get the current time in minutes from midnight
   int currentTimeMinutes = now.hour() * 60 + now.minute();
